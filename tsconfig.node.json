@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    /* If transpiling with TypeScript: */
+    "allowJs": true,
+    "checkJs": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": true
+  },
+  "include": ["eslint.config.js", "tsup.config.ts", ".lintstagedrc.js"]
+}
