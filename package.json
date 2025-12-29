@@ -1,6 +1,6 @@
 {
   "name": "@v-bible/gallica-scraper",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Digital Gallica Library Scraper",
   "type": "module",
   "scripts": {
