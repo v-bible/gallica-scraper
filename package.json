@@ -7,14 +7,14 @@
     "prepare": "husky",
     "prebuild": "tsc",
     "build": "tsup",
-    "postinstall": "npx @stricli/auto-complete@latest install gallica-scraper --bash __digivatlib-scraper_bash_complete"
+    "postinstall": "npx @stricli/auto-complete@latest install gallica-scraper --bash __gallica-scraper_bash_complete"
   },
   "files": [
     "dist"
   ],
   "bin": {
     "gallica-scraper": "dist/cli.js",
-    "__digivatlib-scraper_bash_complete": "dist/bash-complete.js"
+    "__gallica-scraper_bash_complete": "dist/bash-complete.js"
   },
   "dependencies": {
     "@stricli/auto-complete": "1.2.4",
