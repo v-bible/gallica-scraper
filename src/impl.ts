@@ -1,5 +1,6 @@
 import { existsSync } from 'fs';
 import { mkdir, readFile, writeFile } from 'fs/promises';
+import { delay, retry } from 'es-toolkit';
 import { PDFDocument } from 'pdf-lib';
 import { OUTPUT_BASE_DIR } from '@/constants';
 import type { LocalContext } from '@/context';
@@ -16,7 +17,7 @@ export default async function (
   flags: CommandFlags,
   ...documentUrls: string[]
 ): Promise<void> {
-  for (const documentUrl of documentUrls) {
+  const processDocument = async (documentUrl: string): Promise<void> => {
     const documentNameUrl = documentUrl.replace(
       'https://gallica.bnf.fr/',
       'https://gallica.bnf.fr/services/getSyntheseContent/',
@@ -37,9 +38,11 @@ export default async function (
       );
     }
 
-    const outDir = flags.outDir || `${OUTPUT_BASE_DIR}/${documentName}`;
+    const outDir = `${flags.outDir || OUTPUT_BASE_DIR}/${documentName}`;
 
-    const images = await scrapeData(documentUrl);
+    const { images } = await scrapeData(documentUrl);
+
+    await mkdir(outDir, { recursive: true });
 
     for (const [index, imageData] of images.entries()) {
       logger.info(
@@ -47,12 +50,17 @@ export default async function (
       );
 
       try {
-        const response = await fetch(imageData.url);
+        const response = await retry(async () => {
+          await delay(5000);
+          const response = await fetch(imageData.url);
+          if (!response.ok) throw new Error(response.statusText);
+          return response;
+        }, 100);
+
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
         const filename = imageData.name;
-        await mkdir(outDir, { recursive: true });
         let filePath = `${outDir}/${filename}`;
 
         if (existsSync(filePath)) {
@@ -100,5 +108,25 @@ export default async function (
       await writeFile(pdfPath, pdfBytes);
       logger.info(`PDF saved to ${pdfPath}`);
     }
+  };
+
+  const results = await Promise.allSettled(
+    documentUrls.map((documentUrl) => processDocument(documentUrl)),
+  );
+
+  const failedDocuments = results
+    .map((result, index) => ({ result, documentUrl: documentUrls[index] }))
+    .filter(({ result }) => result.status === 'rejected');
+
+  if (failedDocuments.length > 0) {
+    for (const { result, documentUrl } of failedDocuments) {
+      logger.error(
+        `Failed to process ${documentUrl}: ${(result as PromiseRejectedResult).reason}`,
+      );
+    }
+
+    throw new Error(
+      `Failed to process ${failedDocuments.length}/${documentUrls.length} documents`,
+    );
   }
 }
