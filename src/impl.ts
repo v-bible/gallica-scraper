@@ -12,27 +12,46 @@ interface CommandFlags {
   toPdf?: boolean;
 }
 
+interface DocumentResult {
+  documentUrl: string;
+  documentName: string;
+  errors: string[];
+}
+
+const getErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+
 export default async function (
   this: LocalContext,
   flags: CommandFlags,
   ...documentUrls: string[]
 ): Promise<void> {
-  const processDocument = async (documentUrl: string): Promise<void> => {
+  const processDocument = async (
+    documentUrl: string,
+  ): Promise<DocumentResult> => {
     const documentNameUrl = documentUrl.replace(
       'https://gallica.bnf.fr/',
       'https://gallica.bnf.fr/services/getSyntheseContent/',
     );
 
     let documentName = documentUrl.split('/').pop() || 'document';
+    const errors: string[] = [];
 
     try {
-      const response = await fetch(documentNameUrl);
+      const response = await retry(async () => {
+        await delay(5000);
+        const response = await fetch(documentNameUrl);
+        if (!response.ok) throw new Error(response.statusText);
+        return response;
+      }, 300);
       const data = await response.json();
       documentName =
         data.fragment.parameters.gallicarte.title.replaceAll('/', '_') ||
         documentName;
+
       logger.info(`Fetched document name: ${documentName}`);
-    } catch {
+    } catch (error) {
+      errors.push(`document-name: ${getErrorMessage(error)}`);
       logger.warn(
         `Could not fetch document name from ${documentNameUrl}, using default name: ${documentName}`,
       );
@@ -40,7 +59,18 @@ export default async function (
 
     const outDir = `${flags.outDir || OUTPUT_BASE_DIR}/${documentName}`;
 
-    const { images } = await scrapeData(documentUrl);
+    let images: { url: string; name: string }[] = [];
+    try {
+      ({ images } = await scrapeData(documentUrl));
+    } catch (error) {
+      errors.push(`manifest: ${getErrorMessage(error)}`);
+
+      return {
+        documentUrl,
+        documentName,
+        errors,
+      };
+    }
 
     await mkdir(outDir, { recursive: true });
 
@@ -55,21 +85,23 @@ export default async function (
           const response = await fetch(imageData.url);
           if (!response.ok) throw new Error(response.statusText);
           return response;
-        }, 100);
+        }, 300);
 
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
         const filename = imageData.name;
-        let filePath = `${outDir}/${filename}`;
+        const filePath = `${outDir}/${filename}`;
 
         if (existsSync(filePath)) {
           logger.info(`File already exists at ${filePath}, skipping download.`);
+          continue;
         }
 
         await writeFile(filePath, buffer);
         logger.info(`Saved image to ${filePath}`);
       } catch (error) {
+        errors.push(`image: ${getErrorMessage(error)}`);
         logger.error(
           `Error downloading or saving image url ${imageData.url}: ${error}`,
         );
@@ -105,23 +137,49 @@ export default async function (
 
       const pdfBytes = await pdfDoc.save();
       const pdfPath = `${outDir}/${documentName}.pdf`;
-      await writeFile(pdfPath, pdfBytes);
-      logger.info(`PDF saved to ${pdfPath}`);
+      try {
+        await writeFile(pdfPath, pdfBytes);
+        logger.info(`PDF saved to ${pdfPath}`);
+      } catch (error) {
+        errors.push(`pdf: ${getErrorMessage(error)}`);
+      }
     }
+
+    return {
+      documentUrl,
+      documentName,
+      errors,
+    };
   };
 
-  const results = await Promise.allSettled(
+  const results = await Promise.all(
     documentUrls.map((documentUrl) => processDocument(documentUrl)),
   );
 
-  const failedDocuments = results
-    .map((result, index) => ({ result, documentUrl: documentUrls[index] }))
-    .filter(({ result }) => result.status === 'rejected');
+  const failedDocuments = results.filter((result) => result.errors.length > 0);
+
+  const reportPath = `${flags.outDir || OUTPUT_BASE_DIR}/crawl-report.json`;
+  await mkdir(flags.outDir || OUTPUT_BASE_DIR, { recursive: true });
+  await writeFile(
+    reportPath,
+    JSON.stringify(
+      {
+        generatedAt: new Date().toISOString(),
+        totalDocuments: results.length,
+        failedDocuments: failedDocuments.length,
+        documents: results,
+      },
+      null,
+      2,
+    ),
+    'utf-8',
+  );
+  logger.info(`Crawl report saved to ${reportPath}`);
 
   if (failedDocuments.length > 0) {
-    for (const { result, documentUrl } of failedDocuments) {
+    for (const failed of failedDocuments) {
       logger.error(
-        `Failed to process ${documentUrl}: ${(result as PromiseRejectedResult).reason}`,
+        `Failed ${failed.documentUrl}: ${failed.errors.join(' | ')}`,
       );
     }
 
