@@ -25,6 +25,18 @@ const command = buildCommand({
         brief: 'Convert downloaded images to a single PDF file',
         optional: true,
       },
+      ignoreCompleted: {
+        kind: 'boolean',
+        brief:
+          'Skip downloading if all images already exist in the output directory, or PDF already exists if --toPdf is set',
+        optional: true,
+      },
+      overwrite: {
+        kind: 'boolean',
+        brief:
+          'Overwrite existing files if they already exist in the output directory',
+        optional: true,
+      },
     },
   },
   docs: {
