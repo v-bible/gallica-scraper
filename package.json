@@ -7,42 +7,43 @@
     "prepare": "husky",
     "prebuild": "tsc",
     "build": "tsup",
-    "postinstall": "npx @stricli/auto-complete@latest install gallica-scraper --bash __digivatlib-scraper_bash_complete"
+    "postinstall": "npx @stricli/auto-complete@latest install gallica-scraper --bash __gallica-scraper_bash_complete"
   },
   "files": [
     "dist"
   ],
   "bin": {
     "gallica-scraper": "dist/cli.js",
-    "__digivatlib-scraper_bash_complete": "dist/bash-complete.js"
+    "__gallica-scraper_bash_complete": "dist/bash-complete.js"
   },
   "dependencies": {
-    "@stricli/auto-complete": "1.2.4",
-    "@stricli/core": "1.2.4",
-    "dotenv": "17.2.3",
+    "@stricli/auto-complete": "1.2.6",
+    "@stricli/core": "1.2.6",
+    "dotenv": "17.4.2",
+    "es-toolkit": "1.46.1",
     "pdf-lib": "1.17.1",
     "winston": "3.19.0"
   },
   "devDependencies": {
-    "@babel/core": "7.28.5",
-    "@commitlint/cli": "20.2.0",
-    "@commitlint/config-conventional": "20.2.0",
-    "@types/node": "22.18.13",
-    "@typescript-eslint/eslint-plugin": "8.50.1",
-    "@typescript-eslint/parser": "8.50.1",
-    "eslint": "9.39.2",
+    "@babel/core": "7.29.0",
+    "@commitlint/cli": "20.5.3",
+    "@commitlint/config-conventional": "20.5.3",
+    "@types/node": "25.6.0",
+    "@typescript-eslint/eslint-plugin": "8.59.2",
+    "@typescript-eslint/parser": "8.59.2",
+    "eslint": "9.39.4",
     "eslint-config-prettier": "10.1.8",
     "eslint-import-resolver-typescript": "4.4.4",
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-jsx-a11y": "6.10.2",
-    "eslint-plugin-prettier": "5.5.4",
-    "globals": "16.5.0",
+    "eslint-plugin-prettier": "5.5.5",
+    "globals": "17.6.0",
     "husky": "9.1.7",
-    "lint-staged": "16.2.7",
-    "prettier": "3.7.4",
+    "lint-staged": "16.4.0",
+    "prettier": "3.8.3",
     "tsup": "8.5.1",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.50.1"
+    "typescript-eslint": "8.59.2"
   }
 }
