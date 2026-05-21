@@ -82,6 +82,11 @@ export default async function (
       logger.warn(
         `Could not fetch document name from ${documentNameUrl}, using default name: ${documentName}`,
       );
+      return {
+        documentUrl,
+        documentName,
+        errors,
+      };
     }
 
     const documentOutputPath = `${outDirFlag}/${documentName}`;
@@ -200,43 +205,57 @@ export default async function (
         logger.error(
           `Error downloading or saving image url ${imageData.url}: ${error}`,
         );
+
+        return {
+          documentUrl,
+          documentName,
+          errors,
+        };
       }
     }
 
     if (toPdfFlag) {
       logger.info('Converting images to PDF...');
 
-      const pdfDoc = await PDFDocument.create();
+      try {
+        const pdfDoc = await PDFDocument.create();
 
-      for (const [index, imageData] of images.entries()) {
-        logger.info(`Adding image ${index + 1}/${images.length} to PDF`);
+        for (const [index, imageData] of images.entries()) {
+          logger.info(`Adding image ${index + 1}/${images.length} to PDF`);
 
-        const imageFilePath = `${documentOutputPath}/${imageData.name}`;
-        const imageBytes = await readFile(imageFilePath);
+          const imageFilePath = `${documentOutputPath}/${imageData.name}`;
+          const imageBytes = await readFile(imageFilePath);
 
-        let image;
-        if (imageData.name.toLowerCase().endsWith('.png')) {
-          image = await pdfDoc.embedPng(imageBytes);
-        } else {
-          image = await pdfDoc.embedJpg(imageBytes);
+          let image;
+          if (imageData.name.toLowerCase().endsWith('.png')) {
+            image = await pdfDoc.embedPng(imageBytes);
+          } else {
+            image = await pdfDoc.embedJpg(imageBytes);
+          }
+
+          const page = pdfDoc.addPage([image.width, image.height]);
+          page.drawImage(image, {
+            x: 0,
+            y: 0,
+            width: image.width,
+            height: image.height,
+          });
         }
 
-        const page = pdfDoc.addPage([image.width, image.height]);
-        page.drawImage(image, {
-          x: 0,
-          y: 0,
-          width: image.width,
-          height: image.height,
-        });
-      }
-
-      const pdfBytes = await pdfDoc.save();
-      const pdfPath = `${documentOutputPath}/${documentName}.pdf`;
-      try {
+        const pdfBytes = await pdfDoc.save();
+        const pdfPath = `${documentOutputPath}/${documentName}.pdf`;
         await writeFile(pdfPath, pdfBytes);
         logger.info(`PDF saved to ${pdfPath}`);
       } catch (error) {
         errors.push(`pdf: ${getErrorMessage(error)}`);
+
+        logger.error(`Error saving PDF to ${pdfPath}: ${error}`);
+
+        return {
+          documentUrl,
+          documentName,
+          errors,
+        };
       }
     }
 

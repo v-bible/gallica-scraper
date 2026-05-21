@@ -4,4 +4,4 @@ export const DEFAULT_IGNORE_COMPLETED = true;
 export const DEFAULT_OVERWRITE = false;
 
 export const DELAY_BETWEEN_REQUESTS_MS = 1000;
-export const MAX_RETRY_ATTEMPTS = 300;
+export const MAX_RETRY_ATTEMPTS = 500;
