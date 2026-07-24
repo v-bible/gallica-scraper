@@ -3,6 +3,25 @@
   "type": "module",
   "version": "1.0.1",
   "description": "Digital Gallica Library Scraper",
+  "author": "v-bible",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/v-bible/gallica-scraper.git"
+  },
+  "exports": {
+    ".": {
+      "types": {
+        "import": "./dist/cli.d.mts",
+        "require": "./dist/cli.d.cts"
+      },
+      "import": "./dist/cli.js",
+      "require": "./dist/cli.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/cli.cjs",
+  "module": "./dist/cli.js",
+  "types": "./dist/cli.d.mts",
   "bin": {
     "gallica-scraper": "dist/cli.js",
     "__gallica-scraper_bash_complete": "dist/bash-complete.js"
