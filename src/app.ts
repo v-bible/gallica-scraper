@@ -1,6 +1,6 @@
-import { buildApplication, buildCommand } from '@stricli/core';
-import { description, version } from '@/../package.json';
-import { OUTPUT_BASE_DIR } from '@/constants';
+import { buildApplication, buildCommand } from '@stricli/core'
+import { description, version } from '@/../package.json'
+import { OUTPUT_BASE_DIR } from '@/constants'
 
 const command = buildCommand({
   loader: async () => import('./impl'),
@@ -49,11 +49,11 @@ const command = buildCommand({
   docs: {
     brief: description,
   },
-});
+})
 
 export const app = buildApplication(command, {
   name: 'gallica-scraper',
   versionInfo: {
     currentVersion: version,
   },
-});
+})
