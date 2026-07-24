@@ -1,6 +1,6 @@
-import { buildApplication, buildCommand } from '@stricli/core';
-import { description, version } from '@/../package.json';
-import { OUTPUT_BASE_DIR } from '@/constants';
+import { buildApplication, buildCommand } from '@stricli/core'
+import { description, version } from '@/../package.json'
+import { OUTPUT_BASE_DIR } from '@/constants'
 
 const command = buildCommand({
   loader: async () => import('./impl'),
@@ -37,16 +37,23 @@ const command = buildCommand({
           'Overwrite existing files if they already exist in the output directory',
         optional: true,
       },
+      fromFile: {
+        kind: 'parsed',
+        brief:
+          'Path to a text file containing a list of document urls to scrape from Gallica (one url per line)',
+        parse: String,
+        optional: true,
+      },
     },
   },
   docs: {
     brief: description,
   },
-});
+})
 
 export const app = buildApplication(command, {
   name: 'gallica-scraper',
   versionInfo: {
     currentVersion: version,
   },
-});
+})

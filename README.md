@@ -12,7 +12,7 @@
 
 <!-- Table of Contents -->
 
-# :notebook_with_decorative_cover: Table of Contents
+## :notebook_with_decorative_cover: Table of Contents
 
 - [About the Project](#star2-about-the-project)
   - [Environment Variables](#key-environment-variables)
@@ -98,17 +98,20 @@ pnpm build
 
 ```bash
 USAGE
-  gallica-scraper [--outDir value] [--toPdf] <args>...
+  gallica-scraper [--outDir value] [--toPdf] [--ignoreCompleted] [--overwrite] [--fromFile value] <args>...
   gallica-scraper --help
   gallica-scraper --version
 
 Digital Gallica Library Scraper
 
 FLAGS
-     [--outDir]           Output directory. Default to "./output/<document-name>"
-     [--toPdf/--noToPdf]  Convert downloaded images to a single PDF file
-  -h  --help              Print help information and exit
-  -v  --version           Print version information and exit
+     [--outDir]                               Output directory. Default to "./output/<document-name>"
+     [--toPdf/--noToPdf]                      Convert downloaded images to a single PDF file
+     [--ignoreCompleted/--noIgnoreCompleted]  Skip downloading if all images already exist in the output directory, or PDF already exists if --toPdf is set
+     [--overwrite/--noOverwrite]              Overwrite existing files if they already exist in the output directory
+     [--fromFile]                             Path to a text file containing a list of document urls to scrape from Gallica (one url per line)
+  -h  --help                                  Print help information and exit
+  -v  --version                               Print version information and exit
 
 ARGUMENTS
   args...  List of document urls to scrape from Gallica (e.g., "https://gallica.bnf.fr/ark:/12148/bpt6k42278868", "https://gallica.bnf.fr/ark:/12148/bpt6k42472912")
@@ -117,7 +120,9 @@ ARGUMENTS
 **Example**:
 
 ```bash
-pnpm build && ./dist/cli.js --outDir ./my-output --toPdf https://gallica.bnf.fr/ark:/12148/bpt6k42472912
+pnpm build && ./dist/cli.mjs --outDir ./my-output --toPdf https://gallica.bnf.fr/ark:/12148/bpt6k42472912
+
+pmpn build && ./dist/cli.mjs --outDir ./my-output --toPdf --ignoreCompleted --overwrite --fromFile ./document-urls.txt
 ```
 
 <!-- Contributing -->
@@ -125,7 +130,7 @@ pnpm build && ./dist/cli.js --outDir ./my-output --toPdf https://gallica.bnf.fr/
 ## :wave: Contributing
 
 <a href="https://github.com/v-bible/gallica-scraper/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=v-bible/gallica-scraper" />
+  <img src="https://contrib.rocks/image?repo=v-bible/gallica-scraper" alt="contributors" />
 </a>
 
 Contributions are always welcome!

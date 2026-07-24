@@ -1,4 +1,5 @@
 name: release-please
+
 on:
   push:
     branches:
@@ -7,22 +8,16 @@ on:
 jobs:
   release_please:
     runs-on: ubuntu-latest
-
-    # NOTE: We have to give write contents and packages permissions to the token
     permissions:
       contents: write
       packages: write
       pull-requests: write
-
     steps:
-      # NOTE: You have to turn on "Allow Github Actions to create and approve
-      # pull requests" in the org settings
       - uses: googleapis/release-please-action@v4
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           release-type: node
-
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
 
@@ -33,7 +28,6 @@ jobs:
     permissions:
       contents: write
       packages: write
-
     steps:
       - uses: actions/checkout@v4
 
@@ -46,18 +40,20 @@ jobs:
       - name: Setup Node.js for npm
         uses: actions/setup-node@v4
         with:
-          node-version: 'latest'
+          node-version: latest
           registry-url: 'https://registry.npmjs.org/'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          cache: pnpm
 
       - name: Install Dependencies
         run: pnpm install
 
-      - name: Build
+      - name: Build Production Assets
         run: pnpm run build
 
-      - name: Publish to npm
-        run: pnpm publish --access public
+      - name: Verify Package Exports Compatibility
+        run: pnpm run check-exports
+
+      - name: Publish Package to npm Registry
+        run: pnpm publish --access public --no-git-checks --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
