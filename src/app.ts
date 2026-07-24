@@ -37,6 +37,13 @@ const command = buildCommand({
           'Overwrite existing files if they already exist in the output directory',
         optional: true,
       },
+      fromFile: {
+        kind: 'parsed',
+        brief:
+          'Path to a text file containing a list of document urls to scrape from Gallica (one url per line)',
+        parse: String,
+        optional: true,
+      },
     },
   },
   docs: {

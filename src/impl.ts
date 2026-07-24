@@ -18,6 +18,7 @@ interface CommandFlags {
   toPdf?: boolean;
   ignoreCompleted?: boolean;
   overwrite?: boolean;
+  fromFile?: string;
 }
 
 interface DocumentResult {
@@ -38,6 +39,34 @@ export default async function (
   const toPdfFlag = flags.toPdf || DEFAULT_TO_PDF;
   const ignoreCompletedFlag = flags.ignoreCompleted || DEFAULT_IGNORE_COMPLETED;
   const overwriteFlag = flags.overwrite || DEFAULT_OVERWRITE;
+  const fromFileFlag = flags.fromFile;
+
+  let bookUrls = documentUrls;
+
+  if (fromFileFlag) {
+    try {
+      const fileContent = await readFile(fromFileFlag, 'utf-8');
+      const urlsFromFile = fileContent
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+      bookUrls = [...bookUrls, ...urlsFromFile];
+    } catch (error) {
+      logger.error(
+        `Error reading from file ${fromFileFlag}: ${getErrorMessage(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  if (bookUrls.length === 0) {
+    logger.error('No document URLs provided.');
+    throw new Error('No document URLs provided.');
+  }
+
+  if (!existsSync(outDirFlag)) {
+    await mkdir(outDirFlag, { recursive: true });
+  }
 
   const currentBooks = await readdir(outDirFlag);
 
@@ -267,7 +296,7 @@ export default async function (
   };
 
   let results: DocumentResult[] = [];
-  for (const documentUrl of documentUrls) {
+  for (const documentUrl of bookUrls) {
     const result = await processDocument(documentUrl);
     results.push(result);
   }
@@ -300,7 +329,7 @@ export default async function (
     }
 
     throw new Error(
-      `Failed to process ${failedDocuments.length}/${documentUrls.length} documents`,
+      `Failed to process ${failedDocuments.length}/${bookUrls.length} documents`,
     );
   }
 }
