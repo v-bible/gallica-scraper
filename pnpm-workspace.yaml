@@ -12,3 +12,5 @@ trustPolicy: no-downgrade
 ignoredBuiltDependencies:
   - esbuild
   - unrs-resolver
+
+saveExact: true
